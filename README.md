@@ -41,8 +41,8 @@ Below you can find all the commands that you can use, including the parameters t
 ```
 COMMAND                     PARAMETER             DESCRIPTION
 -----------------------------------------------------------------------------------------------------------------------
-make:workflow <name>                              Generates a workflow definition with the given name
-make:workflow <name>        -s <start state>      Generates a workflow definition with the given name & start state
+workflow:create <name>                              Generates a workflow definition with the given name
+workflow:create <name>        -s <start state>      Generates a workflow definition with the given name & start state
 workflow:generate <name>                          Generates workflows for the specified workflow name in the Workflow folder
 workflow:generate                                 Generates all workflows from all definitions in the Workflow folder
 ```
