@@ -1,11 +1,10 @@
 <?php
 namespace Rhaarhoff\Workflow\Console\Workflow;
 
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputOption;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Symfony\Component\Console\Input\InputOption;
 
 class CreateWorkflow extends GeneratorCommand
 {
@@ -14,7 +13,7 @@ class CreateWorkflow extends GeneratorCommand
      *
      * @var string
      */
-    protected $name = 'make:workflow';
+    protected $name = 'workflow:create';
 
     /**
      * The console command description.

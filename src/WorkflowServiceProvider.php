@@ -25,7 +25,8 @@ class WorkflowServiceProvider extends ServiceProvider
         // Used to initialize some routes or add an event listener.
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\Workflow\CreateWorkflow::class
+                Console\Workflow\CreateWorkflow::class,
+                Console\Workflow\GenerateWorkflow::class
             ]);
         }
     }
