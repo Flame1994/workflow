@@ -43,8 +43,8 @@ COMMAND                     PARAMETER             DESCRIPTION
 -----------------------------------------------------------------------------------------------------------------------
 workflow:create <name>                              Generates a workflow definition with the given name
 workflow:create <name>        -s <start state>      Generates a workflow definition with the given name & start state
-workflow:generate <name>                          Generates workflows for the specified workflow name in the Workflow folder
-workflow:generate                                 Generates all workflows from all definitions in the Workflow folder
+workflow:generate <name>                            Generates workflows for the specified workflow name in the Workflow folder
+workflow:generate                                   Generates all workflows from all definitions in the Workflow folder
 ```
 
 ### License
