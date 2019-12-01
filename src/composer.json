@@ -1,0 +1,17 @@
+{
+    "name": "Rhaarhoff/Workflow",
+    "description": "Creates a specified workflow",
+    "authors": [
+        {
+            "name": "Ruan Haarhoff",
+            "email": "ruan.haarhoff@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Rhaarhoff\\Workflow\\": "src/"
+        }
+    }
+}

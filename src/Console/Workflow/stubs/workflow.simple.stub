@@ -1,0 +1,23 @@
+{
+    "name": "WorkflowName",
+    "startState": "WorkflowStartState",
+    "input": {
+        "input_name": "input_type"
+    },
+    "returns": {
+        "return_name": "return_type"
+    },
+    "workflow": {
+        "WorkflowStartState": {
+            "parameters": {
+                "parameter_name": "parameter_type"
+            },
+            "result": {
+                "return_value": "return_type"
+            },
+            "transition": {
+                "function_name": ""
+            }
+        }
+    }
+}
