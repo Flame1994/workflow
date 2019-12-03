@@ -180,9 +180,13 @@ class CreateWorkflow extends GeneratorCommand
 
         $replace = [];
 
+        $replace = $this->buildWorkflowNameSpace($replace);
+
         $replace = $this->buildWorkflowName($replace, $inputName);
 
         $replace = $this->buildWorkflowStartState($replace);
+
+
 
         return str_replace(
             array_keys($replace), array_values($replace), parent::buildClass($name)
@@ -216,6 +220,13 @@ class CreateWorkflow extends GeneratorCommand
         } else {
             $replace['WorkflowStartState'] = 'start_state_function_name';
         }
+
+        return $replace;
+    }
+
+    protected function buildWorkflowNameSpace(array $replace): array
+    {
+        $replace['WorkflowNameSpace'] = 'App\\\\Workflows\\\\' . $this->formatWorkflowFolderName();
 
         return $replace;
     }

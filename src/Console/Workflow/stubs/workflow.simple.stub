@@ -1,10 +1,12 @@
 {
     "name": "WorkflowName",
+    "uses": {},
+    "namespace": "WorkflowNameSpace",
     "startState": "WorkflowStartState",
     "input": {
         "input_name": "input_type"
     },
-    "returns": {
+    "output": {
         "return_name": "return_type"
     },
     "workflow": {
