@@ -2,7 +2,12 @@
 namespace Rhaarhoff\Workflow;
 
 use Illuminate\Support\ServiceProvider;
+use Rhaarhoff\Workflow\Console\Workflow\CreateWorkflow;
 
+/**
+ * @author Ruan Haarhoff <ruan@aptic.com>
+ * @since 20200208 Initial creation.
+ */
 class WorkflowServiceProvider extends ServiceProvider
 {
     /**
@@ -22,11 +27,13 @@ class WorkflowServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Used to initialize some routes or add an event listener.
         if ($this->app->runningInConsole()) {
-            $this->commands([
-                Console\Workflow\CreateWorkflow::class
-            ]);
+            $this->commands(
+                [
+                    Console\Workflow\CreateWorkflow::class,
+                    Console\Workflow\GenerateWorkflow::class,
+                ]
+            );
         }
     }
 }
