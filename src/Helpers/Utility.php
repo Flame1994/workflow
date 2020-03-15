@@ -170,4 +170,13 @@ class Utility
             return true;
         }
     }
+
+    /**
+     * @param array $fieldContent
+     * @return int
+     */
+    public static function countNumberOfElementInArray(array $fieldContent): int
+    {
+        return count($fieldContent);
+    }
 }

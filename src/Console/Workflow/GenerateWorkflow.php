@@ -89,7 +89,6 @@ class GenerateWorkflow extends GeneratorCommand
         self::DEFINITION_FILE_FIELD_INPUT,
         self::DEFINITION_FILE_FIELD_OUTPUT,
         self::DEFINITION_FILE_FIELD_WORKFLOW,
-
     ];
 
     /**
@@ -107,7 +106,7 @@ class GenerateWorkflow extends GeneratorCommand
             // Generate only the specified workflow
             $this->info('Generating workflows for ' . Utility::formatTextToSnakeCase($name));
 
-            $this->assertInputFieldValid($name);
+            $this->assertInputNameValid($name);
             $this->assertWorkflowValid($name);
         }
 
@@ -131,7 +130,7 @@ class GenerateWorkflow extends GeneratorCommand
     /**
      * @param string $inputName
      */
-    private function assertInputFieldValid(string $inputName)
+    private function assertInputNameValid(string $inputName)
     {
         Utility::assertIsAlphaNumeric($inputName);
     }
@@ -203,16 +202,28 @@ class GenerateWorkflow extends GeneratorCommand
     {
         $fileContent = json_decode(file_get_contents($fullFilePath), true);
 
+        $this->assertHasAllRequiredField($fileContent, $fullFilePath);
+
+        foreach (self::DEFINITION_FILE_REQUIRED_FIELDS as $field) {
+            $this->assertFieldContentValid($fileContent, $fileContent[$field], $field);
+        }
+    }
+
+    /**
+     * @param array $fileContent
+     * @param string $fullFilePath
+     */
+    private function assertHasAllRequiredField(array $fileContent, string $fullFilePath) {
         foreach (self::DEFINITION_FILE_REQUIRED_FIELDS as $field) {
             if (isset($fileContent[$field])) {
-                $this->assertFieldContentValid($fileContent[$field], $field);
+                // Do nothing
             } else {
                 $this->error(
                     vsprintf(self::ERROR_DEFINITION_FIELD_MISSING,
-                         [
-                             $field,
-                             $fullFilePath,
-                         ]
+                        [
+                            $field,
+                            $fullFilePath,
+                        ]
                     )
                 );
             }
@@ -220,34 +231,234 @@ class GenerateWorkflow extends GeneratorCommand
     }
 
     /**
-     * @param string[] $fieldContent
+     * @param $fileContent
+     * @param $fieldContent
      * @param string $field
      */
-    private function assertFieldContentValid($fieldContent, $field)
+    private function assertFieldContentValid($fileContent, $fieldContent, $field)
     {
         // TODO: Implement assertions on each field's content
         switch ($field) {
             case self::DEFINITION_FILE_FIELD_NAME:
-                var_dump('Checking Name field content');
+                $this->assertFieldNameValid($fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_USES:
-                var_dump('Checking Uses field content');
+                $this->assertAllImportClassExists($fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_NAMESPACE:
                 var_dump('Checking NameSpace field content');
                 break;
             case self::DEFINITION_FILE_FIELD_INPUT:
-                var_dump('Checking Input field content');
+                $this->assertInputHasFieldSet($fieldContent);
+                $this->assertInputAllFieldValid($fileContent, $fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_OUTPUT:
-                var_dump('Checking Output field content');
+                $this->assertOutputHasFieldSet($fieldContent);
+                $this->assertOutputAllFieldValid($fileContent, $fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_START_STATE:
-                var_dump('Checking Start field content');
+                $this->assertStartStateValid($fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_WORKFLOW:
-                var_dump('Checking Workflow field content');
+                var_dump('Checking Workflow content');
+                $this->assertAllWorkflowStateValid($fileContent, $fieldContent);
                 break;
+        }
+    }
+
+    /**
+     * @param string $name
+     */
+    private function assertFieldNameValid(string $name)
+    {
+        if (preg_match('/^[A-Z][a-zA-Z0-9]+$/', $name)) {
+            // Do nothing
+        } else {
+            $this->error('Error - Invalid definition name: ' . $name);
+        }
+    }
+
+    /**
+     * @param string[] $allImport
+     */
+    private function assertAllImportClassExists(array $allImport)
+    {
+        foreach ($allImport as $import) {
+            if (class_exists($import)) {
+                // Do nothing
+            } else {
+                $this->error('Error - Class does not exist for import: ' . $import);
+            }
+        }
+    }
+
+    /**
+     * @param string[] $allInputField
+     */
+    private function assertInputHasFieldSet(array $allInputField)
+    {
+        if (Utility::countNumberOfElementInArray($allInputField) === 0) {
+            $this->error('Error - No input parameters specified.');
+        }
+    }
+
+    /**
+     * @param array $fileContent
+     * @param array $allInputField
+     */
+    private function assertInputAllFieldValid(array $fileContent, array $allInputField)
+    {
+        foreach ($allInputField as $inputFieldName => $inputFieldClass) {
+            $this->assertInputFieldNameValid($inputFieldName);
+            $this->assertFieldClassNameValid($inputFieldClass);
+            $this->assertFieldClassImportSpecified(
+                $fileContent[self::DEFINITION_FILE_FIELD_USES],
+                $inputFieldName,
+                $inputFieldClass
+            );
+        }
+    }
+
+    /**
+     * @param string[] $allOutputField
+     */
+    private function assertOutputHasFieldSet(array $allOutputField)
+    {
+        if (Utility::countNumberOfElementInArray($allOutputField) === 1) {
+            // Do nothing
+        } else {
+            $this->error('Error - There should only be one output field set.');
+        }
+    }
+
+    /**
+     * @param array $fileContent
+     * @param array $allOutputField
+     */
+    private function assertOutputAllFieldValid(array $fileContent, array $allOutputField)
+    {
+        foreach ($allOutputField as $outputFieldName => $outputFieldClass) {
+            $this->assertOutputFieldNameValid($outputFieldName);
+            $this->assertFieldClassNameValid($outputFieldClass);
+            $this->assertFieldClassImportSpecified(
+                $fileContent[self::DEFINITION_FILE_FIELD_USES],
+                $outputFieldName,
+                $outputFieldClass
+            );
+        }
+    }
+
+    /**
+     * @param string $fieldName
+     */
+    private function assertInputFieldNameValid(string $fieldName)
+    {
+        if (preg_match('/^[a-z][a-zA-Z0-9]*$/', $fieldName)) {
+            // Do nothing
+        } else {
+            $this->error('Error - Invalid input field name: ' . $fieldName . '. Should start with a lowercase letter and must be alphanumeric.');
+        }
+    }
+
+    /**
+     * @param string $fieldName
+     */
+    private function assertOutputFieldNameValid(string $fieldName)
+    {
+        if (preg_match('/^[a-z][a-zA-Z0-9]*$/', $fieldName)) {
+            // Do nothing
+        } else {
+            $this->error('Error - Invalid output field name: ' . $fieldName . '. Should start with a lowercase letter and must be alphanumeric.');
+        }
+    }
+
+    /**
+     * @param string $fieldClass
+     */
+    private function assertFieldClassNameValid(string $fieldClass)
+    {
+        if (preg_match('/^[A-Z][a-zA-Z0-9]*$/', $fieldClass)) {
+            // Do nothing
+        } else {
+            $this->error('Error - Invalid class name: ' . $fieldClass . '. Should start with an uppercase letter and must be alphanumeric.');
+        }
+    }
+
+    /**
+     * @param string $startState
+     */
+    private function assertStartStateValid(string $startState)
+    {
+        if (preg_match('/^[A-Z][a-zA-Z0-9]*$/', $startState)) {
+            // Do nothing
+        } else {
+            $this->error('Error - Invalid start state name: ' . $startState . '. Should start with an uppercase letter and must be alphanumeric.');
+        }
+    }
+
+    /**
+     * @param array $allImport
+     * @param string $inputFieldName
+     * @param string $inputFieldClass
+     * @return bool
+     */
+    private function assertFieldClassImportSpecified(
+        array $allImport,
+        string $inputFieldName,
+        string $inputFieldClass
+    ): bool {
+        foreach ($allImport as $import) {
+            $allImportPart = explode('\\', $import);
+
+            $lastImportPart = end($allImportPart);
+
+            if ($lastImportPart === $inputFieldClass) {
+                return true;
+            }
+        }
+
+        $this->error('Error - Import is missing for input: ' . $inputFieldName . '.');
+
+        return false;
+    }
+
+    /**
+     * @param array $fileContent
+     * @param array $allWorkflowState
+     */
+    private function assertAllWorkflowStateValid(array $fileContent, array $allWorkflowState)
+    {
+        $this->assertWorkflowHasStateSet($allWorkflowState);
+        $this->assertWorkflowStartStateValid(
+            $fileContent[self::DEFINITION_FILE_FIELD_START_STATE],
+            $allWorkflowState
+        );
+
+        foreach ($allWorkflowState as $workflowState) {
+            // TODO: assert each workflow state is valid
+        }
+    }
+
+    /**
+     * @param string $startState
+     * @param array $allWorkflowState
+     */
+    private function assertWorkflowStartStateValid(string $startState, array $allWorkflowState)
+    {
+        if ($startState === array_key_first($allWorkflowState)) {
+            // Do nothing
+        } else {
+            $this->error('Error - start state specified in workflow does not match: ' . $startState);
+        }
+    }
+
+    /**
+     * @param string[] $allWorkflowState
+     */
+    private function assertWorkflowHasStateSet(array $allWorkflowState)
+    {
+        if (Utility::countNumberOfElementInArray($allWorkflowState) === 0) {
+            $this->error('Error - No workflow states defined.');
         }
     }
 

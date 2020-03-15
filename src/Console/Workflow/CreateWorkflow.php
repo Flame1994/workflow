@@ -209,6 +209,8 @@ class CreateWorkflow extends GeneratorCommand
     {
         $inputName = $this->getNameInput();
 
+        $this->assertNameInputValid($inputName);
+
         $replace = [];
 
         $replace = $this->buildWorkflowNameSpace($replace);
@@ -220,6 +222,20 @@ class CreateWorkflow extends GeneratorCommand
         return str_replace(
             array_keys($replace), array_values($replace), parent::buildClass($name)
         );
+    }
+
+    /**
+     * @param string $inputName
+     */
+    private function assertNameInputValid(string $inputName)
+    {
+        if (preg_match('/^[A-Z][a-zA-Z0-9]+$/', $inputName)) {
+            // Do nothing
+        } else {
+            throw new InvalidArgumentException(
+                'Invalid name: ' . $inputName . '. Name should be camel case and only contain alphanumeric characters.'
+            );
+        }
     }
 
     /**
@@ -260,7 +276,7 @@ class CreateWorkflow extends GeneratorCommand
      */
     protected function buildWorkflowNameSpace(array $replace): array
     {
-        $replace['WorkflowNameSpace'] = 'App\\\\Workflows\\\\' . $this->formatWorkflowFolderName();
+        $replace['WorkflowNameSpace'] = 'App\\\\Workflows\\\\' . $this->getNameInput();
 
         return $replace;
     }

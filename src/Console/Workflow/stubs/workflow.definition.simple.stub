@@ -1,6 +1,6 @@
 {
     "name": "WorkflowName",
-    "uses": {},
+    "uses": [],
     "namespace": "WorkflowNameSpace",
     "startState": "WorkflowStartState",
     "input": {
