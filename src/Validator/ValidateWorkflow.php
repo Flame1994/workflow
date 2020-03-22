@@ -122,7 +122,7 @@ class ValidateWorkflow
     }
 
     /**
-     * @param array $fileContent
+     * @param string[] $fileContent
      * @param string $fullFilePath
      */
     private function assertHasAllRequiredField(array $fileContent, string $fullFilePath) {
@@ -143,11 +143,11 @@ class ValidateWorkflow
     }
 
     /**
-     * @param $fileContent
-     * @param $fieldContent
+     * @param string[] $fileContent
+     * @param string[]|string $fieldContent
      * @param string $field
      */
-    private function assertFieldContentValid($fileContent, $fieldContent, $field)
+    private function assertFieldContentValid(array $fileContent, $fieldContent, string $field)
     {
         switch ($field) {
             case self::DEFINITION_FILE_FIELD_NAME:
@@ -222,8 +222,8 @@ class ValidateWorkflow
     }
 
     /**
-     * @param array $fileContent
-     * @param array $allInputField
+     * @param string[] $fileContent
+     * @param string[] $allInputField
      */
     private function assertInputAllFieldValid(array $fileContent, array $allInputField)
     {
