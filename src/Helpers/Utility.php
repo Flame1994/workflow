@@ -64,9 +64,18 @@ class Utility
      */
     public static function formatTextToSnakeCase(string $text): string
     {
-        $folderName = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $text);
+        $newText = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $text);
 
-        return strtolower($folderName);
+        return strtolower($newText);
+    }
+
+    /**
+     * @param string $text
+     * @return string
+     */
+    public static function formatTextToUppercase(string $text): string
+    {
+        return strtoupper($text);
     }
 
     /**

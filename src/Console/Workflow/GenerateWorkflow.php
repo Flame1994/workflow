@@ -5,6 +5,7 @@ use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Rhaarhoff\Workflow\Helpers\Utility;
 use Rhaarhoff\Workflow\Validator\ValidateWorkflow;
+use Rhaarhoff\Workflow\Generator\ConstructWorkflow;
 use Symfony\Component\Console\Input\InputArgument;
 
 /**
@@ -40,8 +41,8 @@ class GenerateWorkflow extends GeneratorCommand
      * @var string[]
      */
     protected $baseDirectories = [
-        'code',
-        'generated'
+        'Code',
+        'Generated'
     ];
 
     /**
@@ -70,7 +71,8 @@ class GenerateWorkflow extends GeneratorCommand
     /**
      * File Path constants.
      */
-    const FILE_PATH_WORKFLOW_SIMPLE_STUB = __DIR__ . '/stubs/workflow.simple.stub';
+    const FILE_PATH_WORKFLOW_BASE_STUB = __DIR__ . '/stubs/workflow.base.stub';
+    const FILE_PATH_WORKFLOW_COMMON_STUB = __DIR__ . '/stubs/workflow.common.stub';
 
     /**
      * @return bool|null
@@ -123,8 +125,7 @@ class GenerateWorkflow extends GeneratorCommand
      */
     private function generateValidWorkflow(string $inputName)
     {
-        $workflowFolderName = Utility::formatTextToSnakeCase($inputName);
-        $workflowFilePath = $this->getPath($inputName) . $workflowFolderName;
+        $workflowFilePath = $this->getPath($inputName) . $inputName;
 
         if (Utility::fileExists($workflowFilePath)) {
             $this->generateAllValidWorkflowDefinitionFile($workflowFilePath);
@@ -146,22 +147,23 @@ class GenerateWorkflow extends GeneratorCommand
      */
     private function generateAllValidWorkflowDefinitionFile(string $filePath)
     {
-        $definitionFilePath = $filePath . '/definition/';
+        $definitionFilePath = $filePath . '/Definition/';
 
         $allFileInPath = Utility::getAllFileInPath($definitionFilePath);
 
         if (Utility::isArrayEmpty($allFileInPath)) {
             $this->error(vsprintf(self::ERROR_NO_DEFINITION_FILE_IN_PATH, [$definitionFilePath]));
         } else {
-            $this->generateAllValidFileInPath($definitionFilePath, $allFileInPath);
+            $this->generateAllValidFileInPath($filePath, $definitionFilePath, $allFileInPath);
         }
     }
 
     /**
+     * @param string $workflowFolderPath
      * @param string $definitionFilePath
      * @param string[] $allFileInPath
      */
-    private function generateAllValidFileInPath(string $definitionFilePath, array $allFileInPath)
+    private function generateAllValidFileInPath(string $workflowFolderPath, string $definitionFilePath, array $allFileInPath)
     {
         foreach ($allFileInPath as $file) {
             $fullFilePath = $definitionFilePath . $file;
@@ -172,14 +174,72 @@ class GenerateWorkflow extends GeneratorCommand
                 $allError = $validateWorkflow->getError();
 
                 if (Utility::isArrayEmpty($allError)) {
-                    // TODO: Generate the valid workflow.
+                    $this->generateWorkflow($workflowFolderPath, $fullFilePath);
                 } else {
                     $this->showAllDefinitionFileError($allError, $fullFilePath);
+
+                    break;
                 }
             } else {
                 $this->error(vsprintf(self::ERROR_FILE_NOT_JSON, [$fullFilePath]));
+
+                break;
             }
         }
+    }
+
+    /**
+     * @param string $workflowFolderPath
+     * @param string $fullFilePath
+     */
+    private function generateWorkflow(string $workflowFolderPath, string $fullFilePath)
+    {
+        var_dump($workflowFolderPath);
+        var_dump($fullFilePath);
+        $definitionFileContent = json_decode(file_get_contents($fullFilePath), true);
+
+        $this->generateWorkflowCommonIfNeeded();
+        $this->generateWorkflowBase($definitionFileContent, $workflowFolderPath);
+    }
+
+    private function generateWorkflowCommonIfNeeded()
+    {
+        $path = $this->laravel['path'] . '/Workflows/Common';
+
+        if ($this->workflowCommonAlreadyExists($path)) {
+            // Do nothing.
+        } else {
+            $this->files->makeDirectory($path, 0777, true, true);
+            $this->files->put(
+                $path . '/Workflow.php',
+                $this->constructInitialClassCommon()
+            );
+        }
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return bool
+     */
+    protected function workflowCommonAlreadyExists(string $path): bool
+    {
+        return $this->files->exists($path);
+    }
+
+    /**
+     * @param string[] $definitionFileContent
+     * @param string $workflowFolderPath
+     */
+    private function generateWorkflowBase(array $definitionFileContent, string $workflowFolderPath)
+    {
+        $workflowName = $definitionFileContent['name'];
+        $workflowPath = $workflowFolderPath . '/Generated/Workflow' . $workflowName . 'Base.php';
+
+        $this->files->put(
+            $workflowPath,
+            $this->sortImports($this->constructWorkflowBaseClass($definitionFileContent))
+        );
     }
 
     /**
@@ -206,19 +266,6 @@ class GenerateWorkflow extends GeneratorCommand
     }
 
     /**
-     * Determine if the class already exists.
-     *
-     * @param  string  $rawName
-     * @return bool
-     */
-    protected function alreadyExists($rawName)
-    {
-        $path = $this->getPath($this->qualifyClass($rawName)) . $this->fileType;
-
-        return $this->files->exists($path);
-    }
-
-    /**
      * Get the console command options.
      *
      * @return array
@@ -239,17 +286,61 @@ class GenerateWorkflow extends GeneratorCommand
     }
 
     /**
+     * @param string[] $fileContent
+     * @return string|string[]
+     */
+    protected function constructWorkflowBaseClass(array $fileContent)
+    {
+        $constructedWorkflow = new ConstructWorkflow($fileContent);
+
+        $replace = $constructedWorkflow->getAllContentReplace();
+
+        return str_replace(
+            array_keys($replace), array_values($replace), $this->constructInitialClassBase()
+        );
+    }
+
+    /**
      * @return string
      */
-    public function getStub(): string
+    private function constructInitialClassBase(): string
     {
-        return self::FILE_PATH_WORKFLOW_SIMPLE_STUB;
+        return $this->files->get($this->getBaseStub());
+    }
+
+    /**
+     * @return string
+     */
+    private function constructInitialClassCommon(): string
+    {
+        return $this->files->get($this->getCommonStub());
+    }
+
+    protected function getStub()
+    {
+        // Do nothing - using custom stub methods.
+    }
+
+    /**
+     * @return string
+     */
+    public function getBaseStub(): string
+    {
+        return self::FILE_PATH_WORKFLOW_BASE_STUB;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommonStub(): string
+    {
+        return self::FILE_PATH_WORKFLOW_COMMON_STUB;
     }
 
     /**
      * Get the destination class path.
      *
-     * @param  string  $name
+     * @param  string $name
      * @return string
      */
     protected function getPath($name)

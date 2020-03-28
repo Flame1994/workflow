@@ -35,6 +35,7 @@ class ValidateWorkflow
     const ERROR_PARAMETER_NOT_PREVIOUSLY_DECLARED = 'Error - Parameter "%s" has not been previously declared.';
     const ERROR_WORKFLOW_STATE_REQUIRES_FIELD = 'Error - Workflow state "%s" requires the "%s" field.';
     const ERROR_WORKFLOW_STATE_ONE_RESULT = 'Error - Workflow state "%s" needs one result field set.';
+    const ERROR_NO_REQUIREMENT_SPECIFIED = 'Transition function "%s" has no requirement specified.';
 
     /**
      * Definition file required fields
@@ -71,8 +72,8 @@ class ValidateWorkflow
     /**
      * Regex constants
      */
-    const REGEX_ALPHANUMERIC_START_UPPERCASE = '/^[A-Z][a-zA-Z0-9]*$/';
-    const REGEX_ALPHANUMERIC_START_LOWERCASE = '/^[a-z][a-zA-Z0-9]*$/';
+    const REGEX_ALPHANUMERIC_START_UPPERCASE = '/^[A-Z][a-zA-Z0-9]*(\[\]){0,1}$/';
+    const REGEX_ALPHANUMERIC_START_LOWERCASE = '/^[a-z][a-zA-Z0-9]*(\[\]){0,1}$/';
 
     /**
      * @var $allError
@@ -356,7 +357,7 @@ class ValidateWorkflow
 
             $lastImportPart = end($allImportPart);
 
-            if ($lastImportPart === $inputFieldClass) {
+            if ($lastImportPart === str_replace('[]', '', $inputFieldClass)) {
                 return true;
             }
         }
@@ -466,6 +467,16 @@ class ValidateWorkflow
         }
 
         foreach ($workflowState[self::WORKFLOW_STATE_FIELD_TRANSITION] as $transitionName => $transitionRequirement) {
+            if (count($workflowState[self::WORKFLOW_STATE_FIELD_TRANSITION]) > 1) {
+                if (strlen($transitionRequirement) === 0) {
+                    $this->error(vsprintf(
+                        self::ERROR_NO_REQUIREMENT_SPECIFIED,
+                        [
+                            $transitionName,
+                        ]
+                    ));
+                }
+            }
             if ($transitionName === self::WORKFLOW_TRANSITION_END) {
                 return;
             } else {

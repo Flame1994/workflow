@@ -40,8 +40,8 @@ class CreateWorkflow extends GeneratorCommand
      * @var string[]
      */
     protected $baseDirectories = [
-        'code',
-        'generated'
+        'Code',
+        'Generated'
     ];
 
     /**
@@ -162,7 +162,7 @@ class CreateWorkflow extends GeneratorCommand
         $name = str_replace('/', '\\', $name);
 
         return $this->qualifyClass(
-            $this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\definition\\'.$name
+            $this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\Definition\\'.$name
         );
     }
 
@@ -191,9 +191,7 @@ class CreateWorkflow extends GeneratorCommand
      */
     private function formatWorkflowFolderName(): string
     {
-        $folderName = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $this->getNameInput());
-
-        return strtolower($folderName);
+        return $this->getNameInput();
     }
 
     /**
