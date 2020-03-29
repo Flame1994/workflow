@@ -111,7 +111,7 @@ class ConstructWorkflow
     /**
      * @return string[]
      */
-    public function getError()
+    public function getError(): array
     {
         return $this->allError;
     }
@@ -246,6 +246,8 @@ class ConstructWorkflow
 
         $docBlockString .= '
      * @return ' . $output[array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT])] .'
+     *
+     * @throws Exception
      */';
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_EXECUTE_DOC_BLOCK] = $docBlockString;

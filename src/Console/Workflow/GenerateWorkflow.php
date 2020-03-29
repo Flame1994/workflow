@@ -112,6 +112,8 @@ class GenerateWorkflow extends GeneratorCommand
 
     /**
      * @param string $name
+     *
+     * @throws FileNotFoundException
      */
     private function generateWorkflowByName(string $name)
     {
@@ -207,9 +209,14 @@ class GenerateWorkflow extends GeneratorCommand
      * @param string $workflowFolderPath
      * @param string $definitionFilePath
      * @param string[] $allFileInPath
+     *
+     * @throws FileNotFoundException
      */
-    private function generateAllValidFileInPath(string $workflowFolderPath, string $definitionFilePath, array $allFileInPath)
-    {
+    private function generateAllValidFileInPath(
+        string $workflowFolderPath,
+        string $definitionFilePath,
+        array $allFileInPath
+    ) {
         foreach ($allFileInPath as $file) {
             $fullFilePath = $definitionFilePath . $file;
 
@@ -246,6 +253,8 @@ class GenerateWorkflow extends GeneratorCommand
         $this->generateWorkflowCodeIfNeeded($definitionFileContent, $workflowFolderPath);
     }
 
+    /**
+     */
     private function generateWorkflowCommonIfNeeded()
     {
         $path = $this->laravel['path'] . '/Workflows/Common';
@@ -286,6 +295,10 @@ class GenerateWorkflow extends GeneratorCommand
         );
     }
 
+    /**
+     * @param string[] $definitionFileContent
+     * @param string $workflowFolderPath
+     */
     private function generateWorkflowCodeIfNeeded(array $definitionFileContent, string $workflowFolderPath)
     {
         $workflowName = $definitionFileContent['name'];
@@ -303,6 +316,7 @@ class GenerateWorkflow extends GeneratorCommand
 
     /**
      * @param string[] $allError
+     * @param string $fullFilePath
      */
     private function showAllDefinitionFileError(array $allError, string $fullFilePath)
     {
@@ -376,6 +390,7 @@ class GenerateWorkflow extends GeneratorCommand
 
     /**
      * @return string
+     * @throws FileNotFoundException
      */
     private function constructInitialClassBase(): string
     {
@@ -384,6 +399,7 @@ class GenerateWorkflow extends GeneratorCommand
 
     /**
      * @return string
+     * @throws FileNotFoundException
      */
     private function constructInitialClass(): string
     {
@@ -392,12 +408,15 @@ class GenerateWorkflow extends GeneratorCommand
 
     /**
      * @return string
+     * @throws FileNotFoundException
      */
     private function constructInitialClassCommon(): string
     {
         return $this->files->get($this->getCommonStub());
     }
 
+    /**
+     */
     protected function getStub()
     {
         // Do nothing - using custom stub methods.
@@ -428,12 +447,11 @@ class GenerateWorkflow extends GeneratorCommand
     }
 
     /**
-     * Get the destination class path.
+     * @param string $name
      *
-     * @param  string $name
      * @return string
      */
-    protected function getPath($name)
+    protected function getPath($name): string
     {
         return $this->laravel['path'] . '/Workflows/';
     }

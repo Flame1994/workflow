@@ -2,7 +2,6 @@
 namespace Rhaarhoff\Workflow;
 
 use Illuminate\Support\ServiceProvider;
-use Rhaarhoff\Workflow\Console\Workflow\CreateWorkflow;
 
 /**
  * @author Ruan Haarhoff <ruan@aptic.com>

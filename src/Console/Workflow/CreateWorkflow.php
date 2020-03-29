@@ -75,18 +75,12 @@ class CreateWorkflow extends GeneratorCommand
 
         $path = $this->getPath($name) . $this->fileType;
 
-        // First we will check to see if the class already exists. If it does, we don't want
-        // to create the class and overwrite the user's code. So, we will bail out so the
-        // code is untouched. Otherwise, we will continue generating this class' files.
         if ($this->isOptionForcedUnset() && $this->alreadyExists($this->getNameInput())) {
             $this->error($this->type.' already exists!');
 
             return false;
         }
 
-        // Next, we will generate the path to the location where this class' file should get
-        // written. Then, we will build the class and make the proper replacements on the
-        // stub files so that it gets the correctly formatted namespace and class name.
         $this->makeDirectory($path);
         $this->makeBaseDirectories();
 
@@ -106,12 +100,11 @@ class CreateWorkflow extends GeneratorCommand
     }
 
     /**
-     * Determine if the class already exists.
+     * @param string $rawName
      *
-     * @param  string  $rawName
      * @return bool
      */
-    protected function alreadyExists($rawName)
+    protected function alreadyExists($rawName): bool
     {
         $path = $this->getPath($this->qualifyClass($rawName)) . $this->fileType;
 
@@ -123,7 +116,7 @@ class CreateWorkflow extends GeneratorCommand
      *
      * @return array
      */
-    protected function getOptions()
+    protected function getOptions(): array
     {
         return [
             [
@@ -146,10 +139,11 @@ class CreateWorkflow extends GeneratorCommand
     /**
      * Parse the class name and format according to the root namespace.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
-    protected function qualifyClass($name)
+    protected function qualifyClass($name): string
     {
         $name = ltrim($name, '\\/');
 

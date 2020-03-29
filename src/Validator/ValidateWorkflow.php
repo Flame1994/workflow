@@ -4,6 +4,10 @@ namespace Rhaarhoff\Workflow\Validator;
 use Exception;
 use Rhaarhoff\Workflow\Helpers\Utility;
 
+/**
+ * @author Ruan Haarhoff <ruan@aptic.com>
+ * @since 20200329 Initial creation.
+ */
 class ValidateWorkflow
 {
     /**
@@ -11,7 +15,6 @@ class ValidateWorkflow
      */
     const ERROR_INVALID_DEFINITION_FILE = 'Error - Invalid definition name: "%s"';
     const ERROR_CLASS_NOT_EXISTS = 'Error - Class does not exist for import: "%s"';
-    const ERROR_NO_INPUT_PARAMETER = 'Error - No input parameters specified.';
     const ERROR_ONE_OUTPUT_PARAMETER = 'Error - There should be one output field set. You have specified %d.';
     const ERROR_INVALID_INPUT_FIELD_NAME =
         'Error - Invalid input field name: "%s". Should start with a lowercase letter and must be alphanumeric.';
@@ -160,7 +163,6 @@ class ValidateWorkflow
             case self::DEFINITION_FILE_FIELD_NAMESPACE:
                 break;
             case self::DEFINITION_FILE_FIELD_INPUT:
-                $this->assertInputHasFieldSet($fieldContent);
                 $this->assertInputAllFieldValid($fileContent, $fieldContent);
                 break;
             case self::DEFINITION_FILE_FIELD_OUTPUT:
@@ -210,16 +212,6 @@ class ValidateWorkflow
                 ));
             }
         }
-    }
-
-    /**
-     * @param string[] $allInputField
-     */
-    private function assertInputHasFieldSet(array $allInputField)
-    {
-//        if (Utility::countNumberOfElementInArray($allInputField) === 0) {
-//            $this->error(self::ERROR_NO_INPUT_PARAMETER);
-//        }
     }
 
     /**
