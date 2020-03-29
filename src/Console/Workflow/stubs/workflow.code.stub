@@ -1,6 +1,7 @@
 <?php
 namespace DefaultWorkflowNameSpace;
 
+use Exception;
 DefaultWorkflowAllImport
 /**
  */

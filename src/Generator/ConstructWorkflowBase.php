@@ -117,7 +117,7 @@ class ConstructWorkflowBase
     /**
      * @return string[]
      */
-    public function getError()
+    public function getError(): array
     {
         return $this->allError;
     }
