@@ -311,7 +311,7 @@ class ConstructWorkflowBase
      *
      * @return ' . $allWorkflowStepResult[array_key_first($allWorkflowStepResult)] . '
      */
-    abstract protected function ' . $workflowStepName . '(';
+    abstract protected function ' . lcfirst($workflowStepName) . '(';
             foreach ($allWorkflowStepInput as $inputName => $inputType) {
                 if ($this->hasTypeNull($inputType)) {
                     $allFunctionAbstractString .= '
