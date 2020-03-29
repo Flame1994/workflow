@@ -2,10 +2,15 @@
 namespace Rhaarhoff\Workflow\Console\Workflow;
 
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputOption;
 
+/**
+ * @author Ruan Haarhoff <ruan@aptic.com>
+ * @since 20200208 Initial creation.
+ */
 class CreateWorkflow extends GeneratorCommand
 {
     /**
@@ -20,14 +25,14 @@ class CreateWorkflow extends GeneratorCommand
      *
      * @var string
      */
-    protected $description = 'Create a new workflow';
+    protected $description = 'Create a new workflow definition';
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $type = 'Workflow';
+    protected $type = 'Workflow Definition';
 
     /**
      * The base directories generated with the definition file.
@@ -35,8 +40,8 @@ class CreateWorkflow extends GeneratorCommand
      * @var string[]
      */
     protected $baseDirectories = [
-        'code',
-        'generated'
+        'Code',
+        'Generated'
     ];
 
     /**
@@ -47,10 +52,22 @@ class CreateWorkflow extends GeneratorCommand
     protected $fileType = '.json';
 
     /**
+     * Option constants.
+     */
+    const OPTION_START_FULL_NAME = 'start';
+    const OPTION_START_SHORT_NAME = 's';
+    const OPTION_START_DESCRIPTION = 'The start state of the workflow.';
+
+    /**
+     * File Path constants.
+     */
+    const FILE_PATH_WORKFLOW_DEFINITION_SIMPLE_STUB = __DIR__ . '/stubs/workflow.definition.simple.stub';
+
+    /**
      * Execute the console command.
      *
      * @return bool|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws FileNotFoundException
      */
     public function handle()
     {
@@ -61,9 +78,7 @@ class CreateWorkflow extends GeneratorCommand
         // First we will check to see if the class already exists. If it does, we don't want
         // to create the class and overwrite the user's code. So, we will bail out so the
         // code is untouched. Otherwise, we will continue generating this class' files.
-        if ((! $this->hasOption('force') ||
-                ! $this->option('force')) &&
-            $this->alreadyExists($this->getNameInput())) {
+        if ($this->isOptionForcedUnset() && $this->alreadyExists($this->getNameInput())) {
             $this->error($this->type.' already exists!');
 
             return false;
@@ -80,6 +95,14 @@ class CreateWorkflow extends GeneratorCommand
         $this->info($this->type . ' ' . $this->getNameInput() . ' definition created successfully.');
 
         return true;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isOptionForcedUnset(): bool
+    {
+        return (!$this->hasOption('force') || !$this->option('force'));
     }
 
     /**
@@ -103,12 +126,21 @@ class CreateWorkflow extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['start', 's', InputOption::VALUE_OPTIONAL, 'The start state of the workflow.']
+            [
+                self::OPTION_START_FULL_NAME,
+                self::OPTION_START_SHORT_NAME,
+                InputOption::VALUE_OPTIONAL,
+                self::OPTION_START_DESCRIPTION,
+            ],
         ];
     }
 
-    public function getStub() {
-        return __DIR__ . '/stubs/workflow.simple.stub';
+    /**
+     * @return string
+     */
+    public function getStub(): string
+    {
+        return self::FILE_PATH_WORKFLOW_DEFINITION_SIMPLE_STUB;
     }
 
     /**
@@ -130,17 +162,16 @@ class CreateWorkflow extends GeneratorCommand
         $name = str_replace('/', '\\', $name);
 
         return $this->qualifyClass(
-            $this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\definition\\'.$name
+            $this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\Definition\\'.$name
         );
     }
 
     /**
-     * Get the default namespace for the class.
+     * @param string $rootNamespace
      *
-     * @param  string  $rootNamespace
      * @return string
      */
-    protected function getDefaultNamespace($rootNamespace)
+    protected function getDefaultNamespace($rootNamespace): string
     {
         return $this->getWorkflowParentFolder($rootNamespace);
     }
@@ -150,9 +181,9 @@ class CreateWorkflow extends GeneratorCommand
      *
      * @return string
      */
-    private function getWorkflowParentFolder($rootNamespace) {
-        return $rootNamespace.'\Workflows\\' .
-            $this->formatWorkflowFolderName();
+    private function getWorkflowParentFolder($rootNamespace): string
+    {
+        return $rootNamespace.'\Workflows\\' . $this->formatWorkflowFolderName();
     }
 
     /**
@@ -160,9 +191,7 @@ class CreateWorkflow extends GeneratorCommand
      */
     private function formatWorkflowFolderName(): string
     {
-        $folderName = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $this->getNameInput());
-
-        return strtolower($folderName);
+        return $this->getNameInput();
     }
 
     /**
@@ -172,11 +201,13 @@ class CreateWorkflow extends GeneratorCommand
      *
      * @param string $name
      * @return mixed|string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws FileNotFoundException
      */
     protected function buildClass($name)
     {
         $inputName = $this->getNameInput();
+
+        $this->assertNameInputValid($inputName);
 
         $replace = [];
 
@@ -186,11 +217,23 @@ class CreateWorkflow extends GeneratorCommand
 
         $replace = $this->buildWorkflowStartState($replace);
 
-
-
         return str_replace(
             array_keys($replace), array_values($replace), parent::buildClass($name)
         );
+    }
+
+    /**
+     * @param string $inputName
+     */
+    private function assertNameInputValid(string $inputName)
+    {
+        if (preg_match('/^[A-Z][a-zA-Z0-9]+$/', $inputName)) {
+            // Do nothing
+        } else {
+            throw new InvalidArgumentException(
+                'Invalid name: ' . $inputName . '. Name should be camel case and only contain alphanumeric characters.'
+            );
+        }
     }
 
     /**
@@ -224,9 +267,14 @@ class CreateWorkflow extends GeneratorCommand
         return $replace;
     }
 
+    /**
+     * @param string[] $replace
+     *
+     * @return string[]
+     */
     protected function buildWorkflowNameSpace(array $replace): array
     {
-        $replace['WorkflowNameSpace'] = 'App\\\\Workflows\\\\' . $this->formatWorkflowFolderName();
+        $replace['WorkflowNameSpace'] = 'App\\\\Workflows\\\\' . $this->getNameInput();
 
         return $replace;
     }

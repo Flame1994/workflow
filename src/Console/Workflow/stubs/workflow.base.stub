@@ -1,0 +1,60 @@
+<?php
+namespace DefaultWorkflowNameSpace;
+
+use Exception;
+use App\Workflows\Common\Workflow;
+DefaultWorkflowAllImport
+/**
+ */
+abstract class DefaultWorkflowNameBase extends Workflow
+{
+    /**
+     * Field constants.
+     */
+DefaultWorkflowAllFieldConstant
+DefaultWorkflowAllFieldVariable
+    /**
+     * @param array $data
+     */
+    public function __construct(array $data)
+    {
+        $this->setAllProperty($data);
+
+        parent::__construct($data);
+    }
+
+    /**
+     * @param array $data
+     */
+    private function setAllProperty(array $data)
+    {
+        $this->assertDataHasAllKey(
+            $data,
+            DefaultWorkflowAllInputParameterArray
+        );
+        DefaultWorkflowInputSetAllProperty
+    }
+
+    /**
+     */
+    public function run()
+    {
+        $this->start();
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function start()
+    {
+        DefaultWorkflowExecuteStartState
+    }
+    DefaultWorkflowStateAllAbstractFunction
+    DefaultWorkflowStateAllFunction
+    /**
+     */
+    protected function executeEnd()
+    {
+        $this->result = $this->DefaultWorkflowOutputName
+    }
+}
