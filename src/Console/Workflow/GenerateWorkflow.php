@@ -5,6 +5,7 @@ use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Rhaarhoff\Workflow\Helpers\Utility;
 use Rhaarhoff\Workflow\Validator\ValidateWorkflow;
+use Rhaarhoff\Workflow\Generator\ConstructWorkflowBase;
 use Rhaarhoff\Workflow\Generator\ConstructWorkflow;
 use Symfony\Component\Console\Input\InputArgument;
 
@@ -46,6 +47,17 @@ class GenerateWorkflow extends GeneratorCommand
     ];
 
     /**
+     * The default directories we which to ignore when scanning all workflow folders
+     *
+     * @var string[]
+     */
+    protected $defaultDirectories = [
+        '.',
+        '..',
+        'Common'
+    ];
+
+    /**
      * Type of file we are generating for the definition of a Workflow.
      *
      * @var string
@@ -73,6 +85,7 @@ class GenerateWorkflow extends GeneratorCommand
      */
     const FILE_PATH_WORKFLOW_BASE_STUB = __DIR__ . '/stubs/workflow.base.stub';
     const FILE_PATH_WORKFLOW_COMMON_STUB = __DIR__ . '/stubs/workflow.common.stub';
+    const FILE_PATH_WORKFLOW_CODE_STUB = __DIR__ . '/stubs/workflow.code.stub';
 
     /**
      * @return bool|null
@@ -83,17 +96,49 @@ class GenerateWorkflow extends GeneratorCommand
         $name = $this->getNameInputOrNull();
 
         if (is_null($name)) {
-            // TODO: generate all workflows
-            $this->info('Generating all workflows.');
-        } else {
-            // Generate only the specified workflow
-            $this->info('Generating workflows for ' . Utility::formatTextToSnakeCase($name));
+            $allWorkflowName = $this->getAllWorkflowName();
+            $this->info('Starting workflow code generation.');
 
+            foreach ($allWorkflowName as $name) {
+                $this->generateWorkflowByName($name);
+            }
+        } else {
             $this->assertInputNameValid($name);
-            $this->generateValidWorkflow($name);
+            $this->generateWorkflowByName($name);
         }
 
         return true;
+    }
+
+    /**
+     * @param string $name
+     */
+    private function generateWorkflowByName(string $name)
+    {
+        $this->info('Generating workflows for ' . $name);
+        $this->generateValidWorkflow($name);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getAllWorkflowName(): array
+    {
+        $allWorkflowName = [];
+
+        $path = $this->getPath('');
+
+        $allFile = scandir($path);
+
+        foreach ($allFile as $file) {
+            if (in_array($file, $this->defaultDirectories)) {
+                // Do nothing
+            } else {
+                $allWorkflowName[] = $file;
+            }
+        }
+
+        return $allWorkflowName;
     }
 
     /**
@@ -194,12 +239,11 @@ class GenerateWorkflow extends GeneratorCommand
      */
     private function generateWorkflow(string $workflowFolderPath, string $fullFilePath)
     {
-        var_dump($workflowFolderPath);
-        var_dump($fullFilePath);
         $definitionFileContent = json_decode(file_get_contents($fullFilePath), true);
 
         $this->generateWorkflowCommonIfNeeded();
         $this->generateWorkflowBase($definitionFileContent, $workflowFolderPath);
+        $this->generateWorkflowCodeIfNeeded($definitionFileContent, $workflowFolderPath);
     }
 
     private function generateWorkflowCommonIfNeeded()
@@ -224,7 +268,7 @@ class GenerateWorkflow extends GeneratorCommand
      */
     protected function workflowCommonAlreadyExists(string $path): bool
     {
-        return $this->files->exists($path);
+        return Utility::fileExists($path);
     }
 
     /**
@@ -240,6 +284,21 @@ class GenerateWorkflow extends GeneratorCommand
             $workflowPath,
             $this->sortImports($this->constructWorkflowBaseClass($definitionFileContent))
         );
+    }
+
+    private function generateWorkflowCodeIfNeeded(array $definitionFileContent, string $workflowFolderPath)
+    {
+        $workflowName = $definitionFileContent['name'];
+        $workflowPath = $workflowFolderPath . '/Code/Workflow' . $workflowName . '.php';
+
+        if (Utility::fileExists($workflowPath)) {
+            // Do nothing
+        } else {
+            $this->files->put(
+                $workflowPath,
+                $this->sortImports($this->constructWorkflowCodeClass($definitionFileContent))
+            );
+        }
     }
 
     /**
@@ -291,7 +350,7 @@ class GenerateWorkflow extends GeneratorCommand
      */
     protected function constructWorkflowBaseClass(array $fileContent)
     {
-        $constructedWorkflow = new ConstructWorkflow($fileContent);
+        $constructedWorkflow = new ConstructWorkflowBase($fileContent);
 
         $replace = $constructedWorkflow->getAllContentReplace();
 
@@ -301,11 +360,34 @@ class GenerateWorkflow extends GeneratorCommand
     }
 
     /**
+     * @param string[] $fileContent
+     * @return string|string[]
+     */
+    protected function constructWorkflowCodeClass(array $fileContent)
+    {
+        $constructedWorkflow = new ConstructWorkflow($fileContent);
+
+        $replace = $constructedWorkflow->getAllContentReplace();
+
+        return str_replace(
+            array_keys($replace), array_values($replace), $this->constructInitialClass()
+        );
+    }
+
+    /**
      * @return string
      */
     private function constructInitialClassBase(): string
     {
         return $this->files->get($this->getBaseStub());
+    }
+
+    /**
+     * @return string
+     */
+    private function constructInitialClass(): string
+    {
+        return $this->files->get($this->getCodeStub());
     }
 
     /**
@@ -335,6 +417,14 @@ class GenerateWorkflow extends GeneratorCommand
     public function getCommonStub(): string
     {
         return self::FILE_PATH_WORKFLOW_COMMON_STUB;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCodeStub(): string
+    {
+        return self::FILE_PATH_WORKFLOW_CODE_STUB;
     }
 
     /**

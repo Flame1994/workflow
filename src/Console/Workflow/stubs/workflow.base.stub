@@ -36,6 +36,13 @@ DefaultWorkflowAllFieldVariable
     }
 
     /**
+     */
+    public function run()
+    {
+        $this->start();
+    }
+
+    /**
      * @throws Exception
      */
     protected function start()

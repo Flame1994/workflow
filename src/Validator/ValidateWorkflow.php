@@ -217,9 +217,9 @@ class ValidateWorkflow
      */
     private function assertInputHasFieldSet(array $allInputField)
     {
-        if (Utility::countNumberOfElementInArray($allInputField) === 0) {
-            $this->error(self::ERROR_NO_INPUT_PARAMETER);
-        }
+//        if (Utility::countNumberOfElementInArray($allInputField) === 0) {
+//            $this->error(self::ERROR_NO_INPUT_PARAMETER);
+//        }
     }
 
     /**

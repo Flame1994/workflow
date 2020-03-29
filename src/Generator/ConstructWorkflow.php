@@ -1,7 +1,6 @@
 <?php
 namespace Rhaarhoff\Workflow\Generator;
 
-use Exception;
 use Rhaarhoff\Workflow\Helpers\Utility;
 
 class ConstructWorkflow
@@ -11,15 +10,12 @@ class ConstructWorkflow
      */
     const REPLACE_DEFAULT_WORKFLOW_NAMESPACE = 'DefaultWorkflowNameSpace';
     const REPLACE_DEFAULT_WORKFLOW_ALL_IMPORT = 'DefaultWorkflowAllImport';
+    const REPLACE_DEFAULT_WORKFLOW_NAME = 'DefaultWorkflowName';
     const REPLACE_DEFAULT_WORKFLOW_NAME_BASE = 'DefaultWorkflowNameBase';
-    const REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_CONSTANT = 'DefaultWorkflowAllFieldConstant';
-    const REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_VARIABLE = 'DefaultWorkflowAllFieldVariable';
-    const REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER_ARRAY = 'DefaultWorkflowAllInputParameterArray';
-    const REPLACE_DEFAULT_WORKFLOW_INPUT_SET_ALL_PROPERTY = 'DefaultWorkflowInputSetAllProperty';
-    const REPLACE_DEFAULT_WORKFLOW_EXECUTE_START_STATE = 'DefaultWorkflowExecuteStartState';
-    const REPLACE_DEFAULT_WORKFLOW_STATE_ALL_ABSTRACT_FUNCTION = 'DefaultWorkflowStateAllAbstractFunction';
-    const REPLACE_DEFAULT_WORKFLOW_STATE_ALL_FUNCTION = 'DefaultWorkflowStateAllFunction';
-    const REPLACE_DEFAULT_WORKFLOW_OUTPUT_NAME = 'DefaultWorkflowOutputName';
+    const REPLACE_DEFAULT_WORKFLOW_EXECUTE_DOC_BLOCK = 'DefaultWorkflowExecuteDocBlock';
+    const REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER = 'DefaultWorkflowAllInputParameter';
+    const REPLACE_DEFAULT_WORKFLOW_OUTPUT_TYPE = 'DefaultWorkflowOutputType';
+    const REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_DATA = 'DefaultWorkflowAllInputData';
 
     /**
      * Definition file fields
@@ -70,25 +66,26 @@ class ConstructWorkflow
     protected $allField = [];
 
     /**
+     * @var $allInputField
+     */
+    protected $allInputField = [];
+
+    /**
      * @var $allContentReplace
      */
     protected $allContentReplace = [
-        self::REPLACE_DEFAULT_WORKFLOW_NAMESPACE => '',
-        self::REPLACE_DEFAULT_WORKFLOW_ALL_IMPORT => '',
-        self::REPLACE_DEFAULT_WORKFLOW_NAME_BASE => '',
-        self::REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_CONSTANT => '',
-        self::REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_VARIABLE => '',
-        self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER_ARRAY => '',
-        self::REPLACE_DEFAULT_WORKFLOW_INPUT_SET_ALL_PROPERTY => '',
-        self::REPLACE_DEFAULT_WORKFLOW_EXECUTE_START_STATE => '',
-        self::REPLACE_DEFAULT_WORKFLOW_STATE_ALL_ABSTRACT_FUNCTION => '',
-        self::REPLACE_DEFAULT_WORKFLOW_STATE_ALL_FUNCTION => '',
-        self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_NAME => '',
+        self::REPLACE_DEFAULT_WORKFLOW_NAMESPACE => 'DefaultWorkflowNameSpace',
+        self::REPLACE_DEFAULT_WORKFLOW_ALL_IMPORT => 'DefaultWorkflowAllImport',
+        self::REPLACE_DEFAULT_WORKFLOW_NAME => 'DefaultWorkflowName',
+        self::REPLACE_DEFAULT_WORKFLOW_NAME_BASE => 'DefaultWorkflowNameBase',
+        self::REPLACE_DEFAULT_WORKFLOW_EXECUTE_DOC_BLOCK => 'DefaultWorkflowExecuteDocBlock',
+        self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER => 'DefaultWorkflowAllInputParameter',
+        self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_TYPE => 'DefaultWorkflowOutputType',
+        self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_DATA => 'DefaultWorkflowAllInputData',
     ];
 
     /**
      * @param string[] $fileContent
-     * @param string $fullFilePath
      */
     public function __construct(array $fileContent)
     {
@@ -129,14 +126,11 @@ class ConstructWorkflow
         $this->constructWorkflowContentNameSpace($fileContent);
         $this->constructWorkflowContentAllImport($fileContent);
         $this->constructWorkflowContentName($fileContent);
-        $this->constructWorkflowContentAllFieldConstant($fileContent);
-        $this->constructWorkflowContentAllFieldVariable($fileContent);
-        $this->constructWorkflowContentAllInputParameterArray($fileContent);
-        $this->constructWorkflowContentInputSetAllProperty($fileContent);
-        $this->constructWorkflowContentExecuteStartState($fileContent);
-        $this->constructWorkflowContentStateAllAbstractFunction($fileContent);
-        $this->constructWorkflowContentStateAllFunction($fileContent);
-        $this->constructWorkflowContentOutputName($fileContent);
+        $this->constructWorkflowContentNameBase($fileContent);
+        $this->constructWorkflowContentExecuteDocBlock($fileContent);
+        $this->constructWorkflowContentAllInputParameter($fileContent);
+        $this->constructWorkflowContentOutputType($fileContent);
+        $this->constructWorkflowContentAllInputData($fileContent);
     }
 
     /**
@@ -145,11 +139,13 @@ class ConstructWorkflow
     private function determineAllField(array $fileContent)
     {
         $allField = [];
+        $allInputField = [];
 
         $allInput = $fileContent[self::DEFINITION_FILE_FIELD_INPUT];
 
         foreach ($allInput as $inputName => $inputType) {
             $allField[$inputName] = $inputType;
+            $allInputField[$inputName] = $inputType;
         }
 
         $allWorkflowStep = $fileContent[self::DEFINITION_FILE_FIELD_WORKFLOW];
@@ -163,6 +159,7 @@ class ConstructWorkflow
         }
 
         $this->allField = $allField;
+        $this->allInputField = $allInputField;
     }
 
     /**
@@ -170,7 +167,7 @@ class ConstructWorkflow
      */
     private function constructWorkflowContentNameSpace(array $fileContent)
     {
-        $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE] . '\\Generated\\Workflow';
+        $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE];
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_NAMESPACE] = $nameSpace;
     }
@@ -188,6 +185,12 @@ class ConstructWorkflow
             $allImportString .= 'use ' . $import . ';' . PHP_EOL;
         }
 
+        $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE];
+
+        $allImportString .=
+            'use ' . $nameSpace . '\\Generated\\Workflow\\' .
+            $this->determineWorkflowBaseName($fileContent) . ';' . PHP_EOL;
+
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_IMPORT] = $allImportString;
     }
 
@@ -198,236 +201,114 @@ class ConstructWorkflow
     {
         $name = $fileContent[self::DEFINITION_FILE_FIELD_NAME];
 
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_NAME_BASE] = 'Workflow' . $name . 'Base';
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_NAME] = 'Workflow' . $name;
     }
 
     /**
      * @param string[] $fileContent
      */
-    private function constructWorkflowContentAllFieldConstant(array $fileContent)
+    private function constructWorkflowContentNameBase(array $fileContent)
     {
-        $allFieldString = '';
-
-        foreach ($this->allField as $fieldName => $fieldType) {
-            $allFieldString .= '    const FIELD_' . Utility::formatTextToUppercase(Utility::formatTextToSnakeCase($fieldName)) . ' = \'' . $fieldName . '\';' . PHP_EOL;
-        }
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_CONSTANT] = $allFieldString;
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_NAME_BASE] =
+            $this->determineWorkflowBaseName($fileContent);
     }
 
     /**
      * @param string[] $fileContent
-     */
-    private function constructWorkflowContentAllFieldVariable(array $fileContent)
-    {
-        $allFieldVariableString = '';
-
-        foreach ($this->allField as $fieldName => $fieldType) {
-            $allFieldVariableString .= '    /**
-    * @var ' . $fieldType . '
-    */
-    private $' . $fieldName . ';' . PHP_EOL;
-        }
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_VARIABLE] = $allFieldVariableString;
-    }
-
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentAllInputParameterArray(array $fileContent)
-    {
-        $allInputString = '[' . PHP_EOL;
-
-        foreach ($this->allField as $fieldName => $fieldType) {
-            $allInputString .= '                \'' . $fieldName . '\',' . PHP_EOL;
-        }
-
-        $allInputString .= '            ]';
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER_ARRAY] = $allInputString;
-    }
-
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentInputSetAllProperty(array $fileContent)
-    {
-        $allPropertyString = '';
-
-        foreach ($this->allField as $fieldName => $fieldType) {
-            $allPropertyString .= '
-        if (array_key_exists(\'' . $fieldName . '\', $data)) {
-            $this->' . $fieldName . ' = $data[\'' . $fieldName .'\'];
-        }' . PHP_EOL;
-        }
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_INPUT_SET_ALL_PROPERTY] = $allPropertyString;
-    }
-
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentExecuteStartState(array $fileContent)
-    {
-        $startState = $fileContent[self::DEFINITION_FILE_FIELD_START_STATE];
-
-        $startStateString = 'try {
-            $this->execute' . $startState . '();
-        } catch(Exception $exception) {
-            throw $exception;
-        }';
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_EXECUTE_START_STATE] = $startStateString;
-    }
-
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentStateAllAbstractFunction(array $fileContent)
-    {
-        $allWorkflowStep = $fileContent[self::DEFINITION_FILE_FIELD_WORKFLOW];
-
-        $allFunctionAbstractString = '';
-
-        foreach ($allWorkflowStep as $workflowStepName => $workflowStepContent) {
-            $allWorkflowStepInput = $workflowStepContent[self::WORKFLOW_STATE_FIELD_PARAMETERS];
-            $allWorkflowStepResult = $workflowStepContent[self::WORKFLOW_STATE_FIELD_RESULT];
-
-            $allFunctionAbstractString .= '
-    /**';
-            foreach ($allWorkflowStepInput as $inputName => $inputType) {
-                $allFunctionAbstractString .= '
-     * @param ' . $inputType . ' $' . $inputName;
-            }
-
-            $allFunctionAbstractString .= '
-     *
-     * @return ' . $allWorkflowStepResult[array_key_first($allWorkflowStepResult)] . '
-     */
-    abstract protected function ' . $workflowStepName . '(';
-            foreach ($allWorkflowStepInput as $inputName => $inputType) {
-                $allFunctionAbstractString .= '
-        ' . $this->determineInputType($inputType) . ' $' . $inputName;
-                if (array_key_last($allWorkflowStepInput) !== $inputName) {
-                    $allFunctionAbstractString .= ',';
-                }
-            }
-            $allFunctionAbstractString .= '
-    );' . PHP_EOL;
-        }
-
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_STATE_ALL_ABSTRACT_FUNCTION] = $allFunctionAbstractString;
-    }
-
-    /**
-     * @param string $inputType
      *
      * @return string
      */
-    private function determineInputType(string $inputType): string
+    private function determineWorkflowBaseName(array $fileContent): string
     {
-        if ($this->endsWith($inputType, '[]')) {
-            return 'array';
+        $name = $fileContent[self::DEFINITION_FILE_FIELD_NAME];
+
+        return 'Workflow' . $name . 'Base';
+    }
+
+    /**
+     * @param string[] $fileContent
+     */
+    private function constructWorkflowContentExecuteDocBlock(array $fileContent)
+    {
+        $output = $fileContent[self::DEFINITION_FILE_FIELD_OUTPUT];
+
+        $docBlockString = '/**';
+
+        foreach ($this->allInputField as $fieldName => $fieldType) {
+            $docBlockString .= '
+     * @param ' . $fieldType . ' $' . $fieldName;
+        }
+
+        if (count($this->allInputField) > 0) {
+            $docBlockString .= '
+     *';
+        }
+
+        $docBlockString .= '
+     * @return ' . $output[array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT])] .'
+     */';
+
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_EXECUTE_DOC_BLOCK] = $docBlockString;
+    }
+
+    /**
+     * @param string[] $fileContent
+     */
+    private function constructWorkflowContentAllInputParameter(array $fileContent)
+    {
+        $allInputParameterString = '';
+
+        foreach ($this->allInputField as $fieldName => $fieldType) {
+            $allInputParameterString .= '
+        ' . $fieldType . ' $' . $fieldName;
+            if (array_key_last($this->allField) !== $fieldName) {
+                $allInputParameterString .= ',';
+            } else {
+                $allInputParameterString .= PHP_EOL . '    ';
+            }
+        }
+
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER] = $allInputParameterString;
+    }
+
+    /**
+     * @param string[] $fileContent
+     */
+    private function constructWorkflowContentOutputType(array $fileContent)
+    {
+        $output = $fileContent[self::DEFINITION_FILE_FIELD_OUTPUT];
+
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_TYPE] =
+            $output[array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT])];
+    }
+
+    /**
+     * @param string[] $fileContent
+     */
+    private function constructWorkflowContentAllInputData(array $fileContent)
+    {
+        $allInputDataString = '';
+
+        if (count($this->allInputField) > 0) {
+            $allInputDataString .= '
+            [';
         } else {
-            return $inputType;
-        }
-    }
-
-    /**
-     * @param $haystack
-     * @param $needle
-     *
-     * @return bool
-     */
-    private function endsWith($haystack, $needle): bool
-    {
-        return substr_compare($haystack, $needle, -strlen($needle)) === 0;
-    }
-
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentStateAllFunction(array $fileContent)
-    {
-        $allWorkflowStep = $fileContent[self::DEFINITION_FILE_FIELD_WORKFLOW];
-
-        $allFunctionString = '';
-
-        foreach ($allWorkflowStep as $workflowStepName => $workflowStepContent) {
-            $allWorkflowStepInput = $workflowStepContent[self::WORKFLOW_STATE_FIELD_PARAMETERS];
-            $allWorkflowStepResult = $workflowStepContent[self::WORKFLOW_STATE_FIELD_RESULT];
-            $allWorkflowStepTransition = $workflowStepContent[self::WORKFLOW_STATE_FIELD_TRANSITION];
-
-            $allFunctionString .= '
-    /**
-     */
-    private function execute' . $workflowStepName . '()
-    {
-        try {';
-            foreach ($allWorkflowStepResult as $resultName => $resultType) {
-                $allFunctionString .= '
-            $this->' . $resultName . ' = $this->' . ucfirst($workflowStepName)  . '(';
-
-                foreach ($allWorkflowStepInput as $inputName => $inputType) {
-                    $allFunctionString .= '
-                $this->' . $inputName;
-
-                    if ($inputName !== array_key_last($allWorkflowStepInput)) {
-                        $allFunctionString .= ',';
-                    }
-                }
-
-                $allFunctionString .= '
-            );';
-            }
-
-            $allFunctionString .= '
-        } catch(Exception $exception) {
-            throw $exception;
-        }' . PHP_EOL;
-
-            $hasParsedFirstTransition = false;
-
-            foreach ($allWorkflowStepTransition as $transitionName => $transitionRequirement) {
-                if (count($allWorkflowStepTransition) === 1) {
-                    $allFunctionString .= '
-        $this->execute' . $transitionName .'();';
-                } else {
-                    if ($hasParsedFirstTransition === false) {
-                        $allFunctionString .= '
-        if (' . $transitionRequirement . ') {
-            $this->execute' . $transitionName .'();
-        }';
-                        $hasParsedFirstTransition = true;
-                    } else {
-                        $allFunctionString .= ' elseif (' . $transitionRequirement . ') {
-            $this->execute' . $transitionName .'();
-        }';
-                    }
-                }
-            }
-
-            if (count($allWorkflowStepTransition) > 1) {
-                $allFunctionString .= ' else {
-            throw new Exception();
-        }';
-            }
-
-            $allFunctionString .= '
-    }' . PHP_EOL;
+            $allInputDataString .= '[';
         }
 
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_STATE_ALL_FUNCTION] = $allFunctionString;
-    }
+        foreach ($this->allInputField as $fieldName => $fieldType) {
+            $allInputDataString .= '
+                self::FIELD_' . Utility::formatTextToUppercase(Utility::formatTextToSnakeCase($fieldName)) . ' => $' . $fieldName . ',';
+        }
 
-    /**
-     * @param string[] $fileContent
-     */
-    private function constructWorkflowContentOutputName(array $fileContent)
-    {
-        $outputNameString = array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT]);
+        if (count($this->allInputField) > 0) {
+            $allInputDataString .= '
+            ]
+        ';
+        } else {
+            $allInputDataString .= ']';
+        }
 
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_NAME] = $outputNameString . ';';
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_DATA] = $allInputDataString;
     }
 }
