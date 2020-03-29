@@ -1,4 +1,8 @@
 ## Laravel Workflow Generator
+[![Latest Stable Version][ico-version]][link-packagist]
+[![Software License][ico-license]](LICENSE)
+[![Total Stars][ico-stars]][link-stars]
+[![Total Downloads][ico-downloads]][link-downloads]
 
 ### Description
 This package provides a way for generating workflow definitions & workflows from those definitions.
@@ -209,12 +213,11 @@ Workflows
 
 The Laravel Workflow generator is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
 
-
-[ico-version]: https://poser.pugx.org/rhaarhoff/laravel-artisan-commands/v/stable
+[ico-version]: https://poser.pugx.org/rhaarhoff/workflow/v/stable
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
-[ico-downloads]: https://poser.pugx.org/rhaarhoff/laravel-artisan-commands/downloads
+[ico-downloads]: https://poser.pugx.org/rhaarhoff/workflow/downloads
 [ico-stars]: https://img.shields.io/github/stars/Flame1994/laravel-artisan-commands.svg
 
-[link-packagist]: https://packagist.org/packages/rhaarhoff/laravel-artisan-commands
-[link-downloads]: https://packagist.org/packages/rhaarhoff/laravel-artisan-commands
+[link-packagist]: https://packagist.org/packages/rhaarhoff/workflow
+[link-downloads]: https://packagist.org/packages/rhaarhoff/workflow
 [link-stars]: https://github.com/Flame1994/laravel-artisan-commands
