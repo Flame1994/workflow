@@ -261,9 +261,15 @@ class ConstructWorkflow
         $allInputParameterString = '';
 
         foreach ($this->allInputField as $fieldName => $fieldType) {
-            $allInputParameterString .= '
+            if ($this->hasTypeNull($fieldType)) {
+                $allInputParameterString .= '
+        ' . $this->determineInputType(explode('|', $fieldType)[0]) . ' $' . $fieldName . ' = null';
+            } else {
+                $allInputParameterString .= '
         ' . $fieldType . ' $' . $fieldName;
-            if (array_key_last($this->allField) !== $fieldName) {
+            }
+
+            if (array_key_last($this->allInputField) !== $fieldName) {
                 $allInputParameterString .= ',';
             } else {
                 $allInputParameterString .= PHP_EOL . '    ';
@@ -271,6 +277,45 @@ class ConstructWorkflow
         }
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_INPUT_PARAMETER] = $allInputParameterString;
+    }
+
+    /**
+     * @param string $fieldType
+     *
+     * @return bool
+     */
+    private function hasTypeNull(string $fieldType): bool
+    {
+        if (strpos($fieldType, '|null') !== false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $inputType
+     *
+     * @return string
+     */
+    private function determineInputType(string $inputType): string
+    {
+        if ($this->endsWith($inputType, '[]')) {
+            return 'array';
+        } else {
+            return $inputType;
+        }
+    }
+
+    /**
+     * @param $haystack
+     * @param $needle
+     *
+     * @return bool
+     */
+    private function endsWith($haystack, $needle): bool
+    {
+        return substr_compare($haystack, $needle, -strlen($needle)) === 0;
     }
 
     /**

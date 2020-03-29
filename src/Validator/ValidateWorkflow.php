@@ -20,8 +20,8 @@ class ValidateWorkflow
         'Error - Invalid input field name: "%s". Should start with a lowercase letter and must be alphanumeric.';
     const ERROR_INVALID_OUTPUT_FIELD_NAME =
         'Error - Invalid output field name: "%s". Should start with a lowercase letter and must be alphanumeric.';
-    const ERROR_INVALID_CLASS_NAME =
-        'Error - Invalid class name: "%s". Should start with an uppercase letter and must be alphanumeric.';
+    const ERROR_INVALID_TYPE =
+        'Error - Invalid type specified: "%s". It must start with an uppercase letter and be alphanumeric or be a primitive type.';
     const ERROR_INVALID_START_STATE_NAME =
         'Error - Invalid start state name: "%s". Should start with an uppercase letter and must be alphanumeric.';
     const ERROR_IMPORT_MISSING = 'Error - Import is missing for parameter: "%s" of type "%s".';
@@ -75,7 +75,8 @@ class ValidateWorkflow
     /**
      * Regex constants
      */
-    const REGEX_ALPHANUMERIC_START_UPPERCASE = '/^[A-Z][a-zA-Z0-9]*(\[\]){0,1}$/';
+    const REGEX_ALPHANUMERIC_START_UPPERCASE = '/^[A-Z][a-zA-Z0-9]*(\[\]){0,1}(\|null){0,1}$/';
+    const REGEX_PRIMITIVE_TYPE = '/^(string|bool|integer|float){1}(\[\]){0,1}(\|null){0,1}$/';
     const REGEX_ALPHANUMERIC_START_LOWERCASE = '/^[a-z][a-zA-Z0-9]*(\[\]){0,1}$/';
 
     /**
@@ -306,9 +307,11 @@ class ValidateWorkflow
     {
         if (preg_match(self::REGEX_ALPHANUMERIC_START_UPPERCASE, $fieldClass)) {
             // Do nothing
+        } elseif(preg_match(self::REGEX_PRIMITIVE_TYPE, $fieldClass)) {
+            // Do nothing
         } else {
             $this->error(vsprintf(
-                self::ERROR_INVALID_CLASS_NAME,
+                self::ERROR_INVALID_TYPE,
                 [
                     $fieldClass,
                 ]
@@ -349,8 +352,14 @@ class ValidateWorkflow
 
             $lastImportPart = end($allImportPart);
 
-            if ($lastImportPart === str_replace('[]', '', $inputFieldClass)) {
+            $allFieldClassPart = explode('|', $inputFieldClass);
+
+            if ($lastImportPart === str_replace('[]', '', reset($allFieldClassPart))) {
                 return true;
+            } elseif(preg_match(self::REGEX_PRIMITIVE_TYPE, $inputFieldClass)) {
+                return true;
+            } else {
+                // Do nothing
             }
         }
 
