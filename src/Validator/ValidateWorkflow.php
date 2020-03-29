@@ -38,7 +38,8 @@ class ValidateWorkflow
     const ERROR_PARAMETER_NOT_PREVIOUSLY_DECLARED = 'Error - Parameter "%s" has not been previously declared.';
     const ERROR_WORKFLOW_STATE_REQUIRES_FIELD = 'Error - Workflow state "%s" requires the "%s" field.';
     const ERROR_WORKFLOW_STATE_ONE_RESULT = 'Error - Workflow state "%s" needs one result field set.';
-    const ERROR_NO_REQUIREMENT_SPECIFIED = 'Transition function "%s" has no requirement specified.';
+    const ERROR_NO_REQUIREMENT_SPECIFIED = 'Error - Transition function "%s" has no requirement specified.';
+    const ERROR_WORKFLOW_OUTPUT_NOT_SPECIFIED = 'Error - Workflow output variable "%s" has not been defined in the workflow.';
 
     /**
      * Definition file required fields
@@ -402,8 +403,31 @@ class ValidateWorkflow
         $allWorkflowStep = [$startStateName];
         $workflowStartState = $allWorkflowState[$startStateName];
 
+        $this->assertWorkflowOutputValid($fileContent, $allPossibleInput);
         $this->assertWorkflowAllTransitionValid($allWorkflowState, $allWorkflowStep, $workflowStartState);
         $this->assertWorkflowAllTransitionReachable($allWorkflowState, $startStateName);
+    }
+
+    /**
+     * @param string[] $fileContent
+     * @param string[] $allPossibleInput
+     */
+    private function assertWorkflowOutputValid(array $fileContent, array $allPossibleInput)
+    {
+        $output = $fileContent[self::DEFINITION_FILE_FIELD_OUTPUT];
+
+        foreach ($allPossibleInput as $possibleInput) {
+            if (isset($possibleInput[array_key_first($output)])) {
+                return;
+            }
+        }
+
+        $this->error(vsprintf(
+            self::ERROR_WORKFLOW_OUTPUT_NOT_SPECIFIED,
+            [
+                array_key_first($output),
+            ]
+        ));
     }
 
     /**
@@ -587,7 +611,7 @@ class ValidateWorkflow
                 if (isset($possibleParameter[$resultName])) {
                     $possibleParameterType = $possibleParameter[$resultName];
 
-                    if ($resultType === $possibleParameterType) {
+                    if ($this->removeNullIfNeeded($resultType ) === $this->removeNullIfNeeded($possibleParameterType)) {
                         // Do nothing
                     } else {
                         $this->error(vsprintf(
@@ -628,7 +652,7 @@ class ValidateWorkflow
             if (isset($possibleParameter[$parameterName])) {
                 $possibleParameterType = $possibleParameter[$parameterName];
 
-                if ($parameterType === $possibleParameterType) {
+                if ($this->removeNullIfNeeded($parameterType) === $this->removeNullIfNeeded($possibleParameterType)) {
                     // Do nothing
                 } else {
                     $this->error(vsprintf(
@@ -660,6 +684,16 @@ class ValidateWorkflow
     }
 
     /**
+     * @param string $text
+     *
+     * @return string
+     */
+    private function removeNullIfNeeded(string $text): string
+    {
+        return str_replace('|null', '', $text);
+    }
+
+    /**
      * @param string $workflowName
      * @param string[] $workflowState
      */
@@ -679,7 +713,7 @@ class ValidateWorkflow
     }
 
     /**
-     * @param string $WorkflowName
+     * @param string $workflowName
      * @param string[] $workflowState
      */
     private function assertWorkflowStateHasFieldResult(string $workflowName, array $workflowState)

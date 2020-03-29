@@ -104,13 +104,16 @@ For a decent example on all capabilities of a workflow definition file, see belo
     "uses": [
         "App\\User",
         "Common\\Id",
-        "Common\\Status"
+        "Common\\Status",
+        "Common\\Contact"
     ],
     "namespace": "App\\Workflows\\UserUpdate",
     "startState": "GetExistingUserOrNull",
     "input": {
         "id": "Id",
-        "status": "Status"
+        "name": "string|null",
+        "status": "Status|null",
+        "allContact": "Contact[]|null"
     },
     "output": {
         "user": "User"
@@ -131,7 +134,9 @@ For a decent example on all capabilities of a workflow definition file, see belo
         "ShouldUpdateUser": {
             "parameters": {
                 "user": "User",
-                "status": "Status"
+                "name": "string|null",
+                "status": "Status|null",
+                "allContact": "Contact[]|null"
             },
             "result": {
                 "shouldUpdateUser": "bool"
@@ -144,7 +149,9 @@ For a decent example on all capabilities of a workflow definition file, see belo
         "UpdateUser": {
             "parameters": {
                 "user": "User",
-                "status": "Status"
+                "name": "string|null",
+                "status": "Status|null",
+                "allContact": "Contact[]|null"
             },
             "result": {
                 "user": "User"
@@ -170,6 +177,11 @@ Additional information on workflow states:
 - For every workflow transition condition, make sure to use ```$this->``` when referencing a variable.
 - Make sure for every variable you define in the workflow, that an **import/use** is specified.
 - You can't define a circular transition. (state1 -> state2 -> state3 -> state1)
+- The use of the following primitive types are allowed:
+    - string
+    - bool
+    - integer
+    - float
 
 When you have finished setting up your definition files, run the following command to generate the code:
 ```
