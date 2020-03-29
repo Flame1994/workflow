@@ -13,8 +13,7 @@ abstract class DefaultWorkflowNameBase extends Workflow
      * Field constants.
      */
 DefaultWorkflowAllFieldConstant
-DefaultWorkflowAllFieldVariable
-    /**
+DefaultWorkflowAllFieldVariable    /**
      * @param array $data
      *
      * @throws Exception

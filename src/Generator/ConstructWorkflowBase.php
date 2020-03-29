@@ -232,7 +232,7 @@ class ConstructWorkflowBase
             $allFieldVariableString .= '    /**
     * @var ' . $fieldType . '
     */
-    private $' . $fieldName . ';' . PHP_EOL;
+    private $' . $fieldName . ';' . PHP_EOL . PHP_EOL;
         }
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_FIELD_VARIABLE] = $allFieldVariableString;
@@ -313,8 +313,13 @@ class ConstructWorkflowBase
      */
     abstract protected function ' . $workflowStepName . '(';
             foreach ($allWorkflowStepInput as $inputName => $inputType) {
-                $allFunctionAbstractString .= '
+                if ($this->hasTypeNull($inputType)) {
+                    $allFunctionAbstractString .= '
+        ' . $this->determineInputType(explode('|', $inputType)[0]) . ' $' . $inputName . ' = null';
+                } else {
+                    $allFunctionAbstractString .= '
         ' . $this->determineInputType($inputType) . ' $' . $inputName;
+                }
                 if (array_key_last($allWorkflowStepInput) !== $inputName) {
                     $allFunctionAbstractString .= ',';
                 }
@@ -324,6 +329,20 @@ class ConstructWorkflowBase
         }
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_STATE_ALL_ABSTRACT_FUNCTION] = $allFunctionAbstractString;
+    }
+
+    /**
+     * @param string $fieldType
+     *
+     * @return bool
+     */
+    private function hasTypeNull(string $fieldType): bool
+    {
+        if (strpos($fieldType, '|null') !== false) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
