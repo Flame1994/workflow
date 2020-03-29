@@ -85,7 +85,7 @@ Once you run the command to create a definition file, like `php artisan workflow
 What does this all mean? See the table below
 ```
 DEFINITION PARAMETER         DESCRIPTION
------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 name                         The name of the workflow
 uses                         The imports (use) of the workflow
 namespace                    The namespace of the workflow
@@ -182,7 +182,7 @@ file structure for a working definition file should then look something like thi
 ```
 Workflows
   - Common
-    - Workflow.php                      // This is the base workflow class.
+    - Workflow.php                      // This is the base workflow class that all base workflows extend from.
   - UserUpdate
     - Code
       - WorkflowUserUpdate.php          // The workflow class where your business logic will go. This extends the base class
