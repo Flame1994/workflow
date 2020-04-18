@@ -188,7 +188,7 @@ class ConstructWorkflow
         $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE];
 
         $allImportString .=
-            'use ' . $nameSpace . '\\Generated\\Workflow\\' .
+            'use ' . $nameSpace . '\\Generated\\' .
             $this->determineWorkflowBaseName($fileContent) . ';' . PHP_EOL;
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_ALL_IMPORT] = $allImportString;
