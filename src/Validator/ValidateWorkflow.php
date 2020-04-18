@@ -77,7 +77,7 @@ class ValidateWorkflow
      * Regex constants
      */
     const REGEX_ALPHANUMERIC_START_UPPERCASE = '/^[A-Z][a-zA-Z0-9]*(\[\]){0,1}(\|null){0,1}$/';
-    const REGEX_PRIMITIVE_TYPE = '/^(string|bool|integer|float){1}(\[\]){0,1}(\|null){0,1}$/';
+    const REGEX_PRIMITIVE_TYPE = '/^(string|bool|int|float){1}(\[\]){0,1}(\|null){0,1}$/';
     const REGEX_ALPHANUMERIC_START_LOWERCASE = '/^[a-z][a-zA-Z0-9]*(\[\]){0,1}$/';
 
     /**

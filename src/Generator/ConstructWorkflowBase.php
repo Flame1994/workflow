@@ -392,7 +392,7 @@ class ConstructWorkflowBase
         try {';
             foreach ($allWorkflowStepResult as $resultName => $resultType) {
                 $allFunctionString .= '
-            $this->' . $resultName . ' = $this->' . ucfirst($workflowStepName)  . '(';
+            $this->' . $resultName . ' = $this->' . lcfirst($workflowStepName)  . '(';
 
                 foreach ($allWorkflowStepInput as $inputName => $inputType) {
                     $allFunctionString .= '
