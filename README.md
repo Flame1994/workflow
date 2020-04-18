@@ -7,6 +7,8 @@
 ### Description
 This package provides a way for generating workflow definitions & workflows from those definitions.
 
+For an example project on how this works visit the [workflow-example](https://github.com/Flame1994/workflow-example) github page.
+
 ### Installation
 
 Require this package with Composer using the following command:
