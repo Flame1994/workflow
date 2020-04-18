@@ -8,7 +8,7 @@ DefaultWorkflowAllImport
 class DefaultWorkflowName extends DefaultWorkflowNameBase
 {
     DefaultWorkflowExecuteDocBlock
-    public static function execute(DefaultWorkflowAllInputParameter): DefaultWorkflowOutputType {
+    public static function execute(DefaultWorkflowAllInputParameter)DefaultWorkflowOutputType {
         $workflow = new static(DefaultWorkflowAllInputData);
         $workflow->run();
 

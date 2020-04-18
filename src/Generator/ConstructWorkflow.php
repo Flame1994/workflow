@@ -263,7 +263,7 @@ class ConstructWorkflow
         foreach ($this->allInputField as $fieldName => $fieldType) {
             if ($this->hasTypeNull($fieldType)) {
                 $allInputParameterString .= '
-        ' . $this->determineInputType(explode('|', $fieldType)[0]) . ' $' . $fieldName . ' = null';
+        ' . $this->determineType(explode('|', $fieldType)[0]) . ' $' . $fieldName . ' = null';
             } else {
                 $allInputParameterString .= '
         ' . $fieldType . ' $' . $fieldName;
@@ -298,7 +298,7 @@ class ConstructWorkflow
      *
      * @return string
      */
-    private function determineInputType(string $inputType): string
+    private function determineType(string $inputType): string
     {
         if ($this->endsWith($inputType, '[]')) {
             return 'array';
@@ -324,9 +324,17 @@ class ConstructWorkflow
     private function constructWorkflowContentOutputType(array $fileContent)
     {
         $output = $fileContent[self::DEFINITION_FILE_FIELD_OUTPUT];
+        $fieldType = $output[array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT])];
 
-        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_TYPE] =
-            $output[array_key_first($fileContent[self::DEFINITION_FILE_FIELD_OUTPUT])];
+        $outputType = '';
+
+        if ($this->hasTypeNull($fieldType)) {
+            // Do nothing
+        } else {
+            $outputType .= ': ' . $this->determineType($fieldType);
+        }
+
+        $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_OUTPUT_TYPE] = $outputType;
     }
 
     /**
