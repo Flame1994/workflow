@@ -167,7 +167,7 @@ class ConstructWorkflow
      */
     private function constructWorkflowContentNameSpace(array $fileContent)
     {
-        $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE];
+        $nameSpace = $fileContent[self::DEFINITION_FILE_FIELD_NAMESPACE] . '\\Code';
 
         $this->allContentReplace[self::REPLACE_DEFAULT_WORKFLOW_NAMESPACE] = $nameSpace;
     }
